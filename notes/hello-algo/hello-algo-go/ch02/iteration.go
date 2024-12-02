@@ -1,5 +1,9 @@
 package main
 
+import "fmt"
+
+// 迭代
+
 /* for 循环 */
 func forLoop(n int) int {
 	res := 0
@@ -37,4 +41,21 @@ func whileLoopII(n int) int {
 		i *= 2
 	}
 	return res
+}
+
+func nestedForLoop(n int) string {
+	res := ""
+	for i := 1; i <= n; i++ {
+		for j := 1; j <= n; j++ {
+			res += fmt.Sprintf("(%d, %d), ", i, j)
+		}
+	}
+	return res
+}
+
+func main() {
+	//fmt.Println(forLoop(5))
+	//fmt.Println(whileLoop(5))
+	//fmt.Println(whileLoopII(5))
+	fmt.Println(nestedForLoop(5))
 }
