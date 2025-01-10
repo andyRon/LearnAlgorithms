@@ -1,8 +1,11 @@
 package main
 
-import "container/list"
+import (
+	"container/list"
+	"testing"
+)
 
-func main() {
+func TestDeque(t *testing.T) {
 	/* 初始化双向队列 */
 	// 在 Go 中，将 list 作为双向队列使用
 	deque := list.New()
@@ -23,8 +26,19 @@ func main() {
 	deque.Remove(rear)  // 队尾元素出队
 
 	/* 获取双向队列的长度 */
-	size := deque.Len()
+	//size := deque.Len()
 
 	/* 判断双向队列是否为空 */
-	isEmpty := deque.Len() == 0
+	//isEmpty := deque.Len() == 0
+}
+
+func TestArrayDeque_Peek_last(t *testing.T) {
+	d := NewArrayDeque(8)
+	d.Push_last(1)
+	d.Push_last(5)
+	d.Push_last(3)
+	d.Push_last(9)
+
+	println(d.ToSlice())
+
 }

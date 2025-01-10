@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 // 基于环形数组实现的双向队列
 type ArrayDeque struct {
 	data          []interface{}
@@ -93,4 +95,17 @@ func (d *ArrayDeque) ToSlice() []interface{} { // TODO
 		slice[i] = d.data[(d.front+i)%d.dequeCapacity]
 	}
 	return slice
+}
+
+func main() {
+	d := NewArrayDeque(8)
+	d.Push_last(1)
+	d.Push_last(5)
+	d.Push_last(3)
+	d.Push_last(9)
+
+	fmt.Println(d.ToSlice())
+	d.Pop_first()
+	fmt.Println(d.ToSlice())
+	fmt.Println(4 % 8)
 }
