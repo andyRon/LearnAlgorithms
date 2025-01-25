@@ -4,14 +4,14 @@ import (
 	"container/list"
 )
 
-type TreeNode struct {
+type treeNode struct {
 	Val   int
-	Left  *TreeNode
-	Right *TreeNode
+	Left  *treeNode
+	Right *treeNode
 }
 
-func NewTreeNode(val int) *TreeNode {
-	return &TreeNode{
+func newTreeNode(val int) *treeNode {
+	return &treeNode{
 		Val:   val,
 		Left:  nil,
 		Right: nil,
@@ -19,11 +19,11 @@ func NewTreeNode(val int) *TreeNode {
 }
 
 func main() {
-	n1 := NewTreeNode(1)
-	n2 := NewTreeNode(2)
-	n3 := NewTreeNode(3)
-	n4 := NewTreeNode(4)
-	n5 := NewTreeNode(5)
+	n1 := newTreeNode(1)
+	n2 := newTreeNode(2)
+	n3 := newTreeNode(3)
+	n4 := newTreeNode(4)
+	n5 := newTreeNode(5)
 
 	n1.Left = n2
 	n1.Right = n3
@@ -31,7 +31,7 @@ func main() {
 	n2.Right = n5
 
 	// 插入
-	p := NewTreeNode(0)
+	p := newTreeNode(0)
 	n1.Left = p
 	p.Left = n2
 	// 删除p
@@ -41,7 +41,7 @@ func main() {
 }
 
 // 层序遍历【广度有限遍历（搜索）bfs】  借助队列来实现
-func levelOrder(root *TreeNode) []any {
+func levelOrder(root *treeNode) []any {
 	// 初始化队列，加入根节点
 	queue := list.New()
 	queue.PushBack(root)
@@ -49,7 +49,7 @@ func levelOrder(root *TreeNode) []any {
 	nums := make([]any, 0)
 	for queue.Len() > 0 {
 		// 队列出队
-		node := queue.Remove(queue.Front()).(*TreeNode)
+		node := queue.Remove(queue.Front()).(*treeNode)
 		// 保存节点值
 		nums = append(nums, node.Val)
 		if node.Left != nil {
@@ -66,7 +66,7 @@ func levelOrder(root *TreeNode) []any {
 var nums []any
 
 // 前序  根节点 -> 左子树 -> 右子树
-func preOrder(node *TreeNode) {
+func preOrder(node *treeNode) {
 	if node == nil {
 		return
 	}
@@ -76,7 +76,7 @@ func preOrder(node *TreeNode) {
 }
 
 // 中序  左子树 -> 根节点 -> 右子树
-func inOrder(node *TreeNode) {
+func inOrder(node *treeNode) {
 	if node == nil {
 		return
 	}
@@ -86,7 +86,7 @@ func inOrder(node *TreeNode) {
 }
 
 // 后序  左子树 -> 右子树 -> 根节点
-func postOrder(node *TreeNode) {
+func postOrder(node *treeNode) {
 	if node == nil {
 		return
 	}
