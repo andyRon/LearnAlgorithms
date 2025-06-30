@@ -1435,10 +1435,22 @@ nums[1] = 0     // 将索引 1 处的元素更新为 0
 
 ### 7.1 二叉树
 
-「二叉树 binary tree」是一种非线性数据结构，代表“祖先”与“后代”之间的派生关系，体现了“一分为二” 的分治逻辑。与链表类似，二叉树的基本单元是节点，每个节点包含值、左子节点引用和右子节点引用。🔖
+「二叉树 binary tree」是一种非线性数据结构，代表“祖先”与“后代”之间的派生关系，体现了“一分为二” 的分治逻辑。与链表类似，二叉树的基本单元是节点，每个节点包含值、左子节点引用和右子节点引用。
 
-```
+```go
+type TreeNode struct {
+	Val int
+  Left *TreeNode
+  Right *TtreeNode
+}
 
+func NewTreeNode(v int) *TreeNode {
+  return &TreeNode{
+    Left: nil,
+    Right: nil,
+    Val: v,
+  }
+}
 ```
 
 **在二叉树中，除叶节点外，其他所有节点都包含子节点和非空子树**。 
@@ -1464,8 +1476,19 @@ nums[1] = 0     // 将索引 1 处的元素更新为 0
 
 ##### 1 初始化二叉树
 
-```
-
+```go
+/* 初始化二叉树 */
+// 初始化节点
+n1 := NewTreeNode(1)
+n2 := NewTreeNode(2)
+n3 := NewTreeNode(3)
+n4 := NewTreeNode(4)
+n5 := NewTreeNode(5)
+// 构建节点之间的引用（指针）
+n1.Left = n2
+n1.Right = n3
+n2.Left = n4
+n2.Right = n5
 ```
 
 ##### 2 插入与删除节点
@@ -1473,6 +1496,16 @@ nums[1] = 0     // 将索引 1 处的元素更新为 0
 与链表类似，在二叉树中插入与删除节点可以通过修改指针来实现。 
 
 ![](images/Pasted image 20240326210205.png)
+
+```go
+/* 插入与删除节点 */
+// 在 n1 -> n2 中间插入节点 P
+p := NewTreeNode(0)
+n1.Left = p
+p.Left = n2
+// 删除节点 P
+n1.Left = n2
+```
 
 > 需要注意的是，插入节点可能会改变二叉树的原有逻辑结构，而删除节点通常意味着删除该节点及其所有子树。因此，在二叉树中，插入与删除通常是由一套操作配合完成的，以实现有实际意义的操作。
 
@@ -1637,6 +1670,24 @@ nums[1] = 0     // 将索引 1 处的元素更新为 0
 
 二叉搜索树的查找操作与二分查找算法的工作原理一致，都是每轮排除一半情况。循环次数最多为二叉树的高度，当二叉树平衡时，使用 O(log⁡n) 时间。
 
+```go
+func (bst *binarySearchTree) search(num int) *TreeNode {
+  node := bst.root
+  for node != nil {
+    if node.Val.(int) < num {
+    	node = node.Right
+    } else if node.Val.(int) > num {
+    	node = node.Left
+    } else {
+    	break
+    }
+  }
+  return node
+}
+```
+
+
+
 ##### 2 插入节点
 
 给定一个待插入元素 `num` ，为了保持二叉搜索树“左子树 < 根节点 < 右子树”的性质：
@@ -1651,7 +1702,38 @@ nums[1] = 0     // 将索引 1 处的元素更新为 0
 - 二叉搜索树不允许存在重复节点，否则将违反其定义。因此，若待插入节点在树中已存在，则不执行插入，直接返回。
 - 为了实现插入节点，我们需要借助节点 `pre` 保存上一轮循环的节点。这样在遍历至 `None` 时，我们可以获取到其父节点，从而完成节点插入操作
 
-
+```go
+/* 插入节点 */
+func (bst *binarySearchTree) insert(num int) {
+    cur := bst.root
+    // 若树为空，则初始化根节点
+    if cur == nil {
+        bst.root = NewTreeNode(num)
+        return
+    }
+    // 待插入节点之前的节点位置
+    var pre *TreeNode = nil
+    // 循环查找，越过叶节点后跳出
+    for cur != nil {
+        if cur.Val == num {
+            return
+        }
+        pre = cur
+        if cur.Val.(int) < num {
+            cur = cur.Right
+        } else {
+            cur = cur.Left
+        }
+    }
+    // 插入节点
+    node := NewTreeNode(num)
+    if pre.Val.(int) < num {
+        pre.Right = node
+    } else {
+        pre.Left = node
+    }
+}
+```
 
 O(log⁡n)
 
@@ -1675,7 +1757,66 @@ O(log⁡n)
 删除节点操作同样使用 O(log⁡n) 时间，其中查找待删除节点需要 O(log⁡n) 时间，获取中序遍历后继节点需要 O(log⁡n) 时间。
 
 ```go
-
+/* 删除节点 */
+func (bst *binarySearchTree) remove(num int) {
+    cur := bst.root
+    // 若树为空，直接提前返回
+    if cur == nil {
+        return
+    }
+    // 待删除节点之前的节点位置
+    var pre *TreeNode = nil
+    // 循环查找，越过叶节点后跳出
+    for cur != nil {
+        if cur.Val == num {
+            break
+        }
+        pre = cur
+        if cur.Val.(int) < num {
+            // 待删除节点在右子树中
+            cur = cur.Right
+        } else {
+            // 待删除节点在左子树中
+            cur = cur.Left
+        }
+    }
+    // 若无待删除节点，则直接返回
+    if cur == nil {
+        return
+    }
+    // 子节点数为 0 或 1
+    if cur.Left == nil || cur.Right == nil {
+        var child *TreeNode = nil
+        // 取出待删除节点的子节点
+        if cur.Left != nil {
+            child = cur.Left
+        } else {
+            child = cur.Right
+        }
+        // 删除节点 cur
+        if cur != bst.root {
+            if pre.Left == cur {
+                pre.Left = child
+            } else {
+                pre.Right = child
+            }
+        } else {
+            // 若删除节点为根节点，则重新指定根节点
+            bst.root = child
+        }
+        // 子节点数为 2
+    } else {
+        // 获取中序遍历中待删除节点 cur 的下一个节点
+        tmp := cur.Right
+        for tmp.Left != nil {
+            tmp = tmp.Left
+        }
+        // 递归删除节点 tmp
+        bst.remove(tmp.Val.(int))
+        // 用 tmp 覆盖 cur
+        cur.Val = tmp.Val
+    }
+}
 ```
 
 ##### 4 中序遍历有序
@@ -1728,11 +1869,58 @@ AVL 树既是二叉搜索树，也是平衡二叉树，同时满足这两类二�
 
 “节点高度”是指从该节点到它的最远叶节点的距离，即所经过的“边”的数量。需要特别注意的是，叶节点的高度为 0 ，而空节点的高度为 −1 。
 
+```go
+/* AVL 树节点结构体 */
+type TreeNode struct {
+    Val    int       // 节点值
+    Height int       // 节点高度
+    Left   *TreeNode // 左子节点引用
+    Right  *TreeNode // 右子节点引用
+}
+```
+
+```go
+/* 获取节点高度 */
+func (t *aVLTree) height(node *TreeNode) int {
+    // 空节点高度为 -1 ，叶节点高度为 0
+    if node != nil {
+        return node.Height
+    }
+    return -1
+}
+
+/* 更新节点高度 */
+func (t *aVLTree) updateHeight(node *TreeNode) {
+    lh := t.height(node.Left)
+    rh := t.height(node.Right)
+    // 节点高度等于最高子树高度 + 1
+    if lh > rh {
+        node.Height = lh + 1
+    } else {
+        node.Height = rh + 1
+    }
+}
+```
+
 
 
 ##### 2 节点平衡因子
 
-节点的平衡因子（balance factor）定义为节点左子树的高度减去右子树的高度，同时规定空节点的平衡因子为 0 。
+节点的**平衡因子（balance factor）**定义为节点左子树的高度减去右子树的高度，同时规定空节点的平衡因子为 0 。
+
+```go
+/* 获取平衡因子 */
+func (t *aVLTree) balanceFactor(node *TreeNode) int {
+    // 空节点平衡因子为 0
+    if node == nil {
+        return 0
+    }
+    // 节点平衡因子 = 左子树高度 - 右子树高度
+    return t.height(node.Left) - t.height(node.Right)
+}
+```
+
+
 
 > 设平衡因子为 f ，则一棵 AVL 树的任意节点的平衡因子皆满足 −1≤f≤1 。
 
@@ -1755,6 +1943,19 @@ AVL 树的特点在于“旋转”操作，它能够在不影响二叉树的中�
 “向右旋转”是一种形象化的说法，实际上需要通过修改节点指针来实现:
 
 ```go
+/* 右旋操作 */
+func (t *aVLTree) rightRotate(node *TreeNode) *TreeNode {
+    child := node.Left
+    grandChild := child.Right
+    // 以 child 为原点，将 node 向右旋转
+    child.Right = node
+    node.Left = grandChild
+    // 更新节点高度
+    t.updateHeight(node)
+    t.updateHeight(child)
+    // 返回旋转后子树的根节点
+    return child
+}
 ```
 
 
@@ -1766,6 +1967,22 @@ AVL 树的特点在于“旋转”操作，它能够在不影响二叉树的中�
 
 
 ![](images/image-20250125124456118.png)
+
+```go
+/* 左旋操作 */
+func (t *aVLTree) leftRotate(node *TreeNode) *TreeNode {
+    child := node.Right
+    grandChild := child.Left
+    // 以 child 为原点，将 node 向左旋转
+    child.Left = node
+    node.Right = grandChild
+    // 更新节点高度
+    t.updateHeight(node)
+    t.updateHeight(child)
+    // 返回旋转后子树的根节点
+    return child
+}
+```
 
 
 
@@ -1783,15 +2000,141 @@ AVL 树的特点在于“旋转”操作，它能够在不影响二叉树的中�
 
 ![](images/image-20250125124612215.png)
 
+如下表所示，我们通过判断失衡节点的平衡因子以及较高一侧子节点的平衡因子的正负号，来确定失衡节点属于图 7-32 中的哪种情况。
+
+![](images/image-20250630140044288.png)
+
+为了便于使用，将旋转操作封装成一个函数。**有了这个函数，我们就能对各种失衡情况进行旋转，使失衡节点重新恢复平衡**。
+
+```go
+/* 执行旋转操作，使该子树重新恢复平衡 */
+func (t *aVLTree) rotate(node *TreeNode) *TreeNode {
+    // 获取节点 node 的平衡因子
+    // Go 推荐短变量，这里 bf 指代 t.balanceFactor
+    bf := t.balanceFactor(node)
+    // 左偏树
+    if bf > 1 {
+        if t.balanceFactor(node.Left) >= 0 {
+            // 右旋
+            return t.rightRotate(node)
+        } else {
+            // 先左旋后右旋
+            node.Left = t.leftRotate(node.Left)
+            return t.rightRotate(node)
+        }
+    }
+    // 右偏树
+    if bf < -1 {
+        if t.balanceFactor(node.Right) <= 0 {
+            // 左旋
+            return t.leftRotate(node)
+        } else {
+            // 先右旋后左旋
+            node.Right = t.rightRotate(node.Right)
+            return t.leftRotate(node)
+        }
+    }
+    // 平衡树，无须旋转，直接返回
+    return node
+}
+```
+
+
+
 #### 7.5.3 AVL树常用操作
-
-
 
 ##### 1 插入节点
 
+AVL 树的节点插入操作与二叉搜索树在主体上类似。唯一的区别在于，在 AVL 树中插入节点后，从该节点到根节点的路径上可能会出现一系列失衡节点。因此，**我们需要从这个节点开始，自底向上执行旋转操作，使所有失衡节点恢复平衡**。
+
+```go
+/* 插入节点 */
+func (t *aVLTree) insert(val int) {
+    t.root = t.insertHelper(t.root, val)
+}
+
+/* 递归插入节点（辅助函数） */
+func (t *aVLTree) insertHelper(node *TreeNode, val int) *TreeNode {
+    if node == nil {
+        return NewTreeNode(val)
+    }
+    /* 1. 查找插入位置并插入节点 */
+    if val < node.Val.(int) {
+        node.Left = t.insertHelper(node.Left, val)
+    } else if val > node.Val.(int) {
+        node.Right = t.insertHelper(node.Right, val)
+    } else {
+        // 重复节点不插入，直接返回
+        return node
+    }
+    // 更新节点高度
+    t.updateHeight(node)
+    /* 2. 执行旋转操作，使该子树重新恢复平衡 */
+    node = t.rotate(node)
+    // 返回子树的根节点
+    return node
+}
+```
+
+
+
 ##### 2 删除节点
 
+在二叉搜索树的删除节点方法的基础上，需要从底至顶执行旋转操作，使所有失衡节点恢复平衡。
+
+```go
+/* 删除节点 */
+func (t *aVLTree) remove(val int) {
+    t.root = t.removeHelper(t.root, val)
+}
+
+/* 递归删除节点（辅助函数） */
+func (t *aVLTree) removeHelper(node *TreeNode, val int) *TreeNode {
+    if node == nil {
+        return nil
+    }
+    /* 1. 查找节点并删除 */
+    if val < node.Val.(int) {
+        node.Left = t.removeHelper(node.Left, val)
+    } else if val > node.Val.(int) {
+        node.Right = t.removeHelper(node.Right, val)
+    } else {
+        if node.Left == nil || node.Right == nil {
+            child := node.Left
+            if node.Right != nil {
+                child = node.Right
+            }
+            if child == nil {
+                // 子节点数量 = 0 ，直接删除 node 并返回
+                return nil
+            } else {
+                // 子节点数量 = 1 ，直接删除 node
+                node = child
+            }
+        } else {
+            // 子节点数量 = 2 ，则将中序遍历的下个节点删除，并用该节点替换当前节点
+            temp := node.Right
+            for temp.Left != nil {
+                temp = temp.Left
+            }
+            node.Right = t.removeHelper(node.Right, temp.Val.(int))
+            node.Val = temp.Val
+        }
+    }
+    // 更新节点高度
+    t.updateHeight(node)
+    /* 2. 执行旋转操作，使该子树重新恢复平衡 */
+    node = t.rotate(node)
+    // 返回子树的根节点
+    return node
+}
+```
+
+
+
 ##### 3 查找节点
+
+AVL 树的节点查找操作与二叉搜索树一致。
 
 #### 7.5.4 AVL树典型应用
 
@@ -2352,7 +2695,9 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 ## 11 排序
 
-> 排序犹如一把将混乱变为秩序的魔法钥匙，使我们能以更高效的方式理解与处理数据。无论是简单的升序，还是复杂的分类排列，排序都向我们展示了数据的和谐美感。
+> 排序犹如一把将混乱变为秩序的魔法钥匙，使我们能以更高效的方式理解与处理数据。
+>
+> 无论是简单的升序，还是复杂的分类排列，排序都向我们展示了数据的和谐美感。
 
 ### 11.1 排序算法
 
@@ -2364,11 +2709,33 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 #### 评价维度
 
-- 运行效率
-- 就地性
-- 稳定性
-- 自适应性
-- 是否基于比较
+- ==运行效率==
+- ==就地性==：原地排序通过在原数组上直接操作实现排序，无须借助额外的辅助数组，从而节省内存。通常情况下，原地排序的数据搬运操作较少，运行速度也更快。
+- ==稳定性==：稳定排序在完成排序后，相等元素在数组中的**相对顺序**不发生改变。
+
+稳定排序是多级排序场景的必要条件。假设我们有一个存储学生信息的表格，第 1 列和第 2 列分别是姓名和年龄。在这种情况下，非稳定排序可能导致输入数据的有序性丧失：
+
+```
+# 输入数据是按照姓名排序好的
+# (name, age)
+  ('A', 19)
+  ('B', 18)
+  ('C', 21)
+  ('D', 19)
+  ('E', 23)
+
+# 假设使用非稳定排序算法按年龄排序列表，
+# 结果中 ('D', 19) 和 ('A', 19) 的相对位置改变，
+# 输入数据按姓名排序的性质丢失
+  ('B', 18)
+  ('D', 19)
+  ('A', 19)
+  ('C', 21)
+  ('E', 23)
+```
+
+- ==自适应性==：**自适应排序**能够利用输入数据已有的顺序信息来减少计算量，达到更优的时间效率。自适应排序算法的最佳时间复杂度通常优于平均时间复杂度。
+- ==是否基于比较==：**基于比较的排序**依赖比较运算符（<、=、>）来判断元素的相对顺序，从而排序整个数组，理论最优时间复杂度为 O(nlog⁡n) 。而**非比较排序**不使用比较运算符，时间复杂度可达 O(n) ，但其**通用性**相对较差。
 
 #### 理想排序算法
 
@@ -2376,7 +2743,7 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 ### 11.2 选择排序
 
-「选择排序 selection sort」的工作原理：开启一个循环，每轮从未排序区间选择最小的元素，将其 放到已排序区间的末尾。
+「选择排序 selection sort」的工作原理：**开启一个循环，每轮从未排序区间选择最小的元素，将其放到已排序区间的末尾**。
 
 设数组的长度为 𝑛 ，选择排序的算法流程如图 11-2 所示。
 
@@ -2388,13 +2755,25 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 ![](images/选择排序.jpg) 代码中，我们用 𝑘 来记录未排序区间内的最小元素:
 
-```
-
+```go
+func selectionSort(nums []int) {
+	n := len(nums)
+	for i := 0; i < n; i++ {
+		k := i
+		for j := i + 1; j < n; j++ {
+			if nums[j] < nums[k] {
+				k = j
+			}
+		}
+		// 将该最小元素与未排序区间的首个元素交换
+		nums[i], nums[k] = nums[k], nums[i]
+	}
+}
 ```
 
 #### 算法特性
 
-- 时间复杂度为 𝑂(𝑛2)、非自适应排序:外循环共 𝑛 − 1 轮，第一轮的未排序区间长度为 𝑛 ，最后一轮 的未排序区间长度为 2 ，即各轮外循环分别包含 𝑛、𝑛 − 1、...、3、2 轮内循环，求和为 (𝑛−1)(𝑛+2) 。
+- 时间复杂度为 ==𝑂(𝑛^2^)==、非自适应排序:==外循环==共 𝑛 − 1 轮，第一轮的未排序区间长度为 𝑛 ，最后一轮的未排序区间长度为 2 ，即各轮外循环分别包含 𝑛、𝑛 − 1、...、3、2 ==轮内循环==，求和为 (𝑛−1)(𝑛+2)/2 。
 - 空间复杂度为 𝑂(1)、原地排序:指针 𝑖 和 𝑗 使用常数大小的额外空间。  
 - 非稳定排序:如图 11‐3 所示，元素 nums[i] 有可能被交换至与其相等的元素的右边，导致两者的相对顺序发生改变。 
 
@@ -2402,7 +2781,7 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 ### 11.3 冒泡排序
 
-「冒泡排序 bubble sort」通过连续地比较与交换相邻元素实现排序。这个过程就像气泡从底部升到顶部一样， 因此得名冒泡排序。
+「冒泡排序 bubble sort」通过**连续地比较与交换相邻元素**实现排序。这个过程就像气泡从底部升到顶部一样， 因此得名冒泡排序。
 
 如图 11-4 所示，冒泡过程可以利用元素交换操作来模拟：从数组最左端开始向右遍历，依次比较相邻元素大小，如果“左元素 > 右元素”就交换二者。遍历完成后，最大的元素会被移动到数组的最右端。 
 
@@ -2419,23 +2798,48 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 ![](images/Pasted image 20240416234944.png)
 
-```
-
+```go
+func bubbleSort(nums []int) {
+  l := len(nums)
+  // 外循环：未排序区间为 [0, i]
+  for i := l - 1; i > 0; i-- {
+    // 内循环：将未排序区间 [0, i] 中的最大元素交换至该区间的最右端
+    for j := 0; j < i; j++ {
+      if nums[j] > nums[j+1] {
+        nums[j], nums[j+1] = nums[j+1], nums[j]
+      }  
+    }
+  }
+}
 ```
 
 #### 效率优化
 
 我们发现，如果某轮“冒泡”中没有执行任何交换操作，说明数组已经完成排序，可直接返回结果。因此，可以增加一个标志位 `flag` 来监测这种情况，一旦出现就立即返回。
 
-经过优化，冒泡排序的最差时间复杂度和平均时间复杂度仍为 𝑂(𝑛2) ；但当输入数组完全有序时，可达到最佳时间复杂度 𝑂(𝑛) 。
+经过优化，冒泡排序的最差时间复杂度和平均时间复杂度仍为 𝑂(𝑛^2^) ；但当输入数组完全有序时，可达到最佳时间复杂度 𝑂(𝑛) 。
 
-```
-
+```go
+func bubbleSortWithFlag(nums []int) {
+  l := len(nums)
+  for i := l - 1; i > 0; i-- {
+    flag := false
+    for j := 0; j < i; j++ {
+      if nums[j] > nums[j+1] {
+      	nums[j], nums[j+1] = nums[j+1], nums[j]
+        flag = true
+      }
+    }
+    if flag == false { // 此轮“冒泡”未交换任何元素，直接跳出
+    	break
+    }
+  }
+}
 ```
 
 #### 算法特性
 
-- **时间复杂度为 𝑂(𝑛2)、自适应排序**：各轮“冒泡”遍历的数组长度依次为 𝑛−1、𝑛−2、…、2、1 ，总和为 (𝑛−1)𝑛/2 。在引入 `flag` 优化后，最佳时间复杂度可达到 𝑂(𝑛) 。
+- **时间复杂度为 𝑂(𝑛^2^)、自适应排序**：各轮“冒泡”遍历的数组长度依次为 𝑛−1、𝑛−2、…、2、1 ，总和为 (𝑛−1)𝑛/2 。在引入 `flag` 优化后，最佳时间复杂度可达到 𝑂(𝑛) 。
 - **空间复杂度为 𝑂(1)、原地排序**：指针 𝑖 和 𝑗 使用常数大小的额外空间。
 - **稳定排序**：由于在“冒泡”中遇到相等元素不交换。
 
@@ -2460,35 +2864,48 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 ![](images/Pasted image 20240422012718.png)
 
-```
-
+```go
+func insertSort(nums []int) {
+  l := len(nums)
+  // 外循环：已排序区间为 [0, i-1]
+  for i := 1; i < l; i++ {
+    base := nums[i]
+    j := i - 1
+    // 内循环：将 base 插入到已排序区间 [0, i-1] 中的正确位置
+    for j >= 0 && nums[j] > base {
+    	nums[j + 1] = nums[j]
+      j--
+    }
+    nums[j + 1] = base
+  }
+}
 ```
 
 #### 算法特性
 
-- **时间复杂度为 、自适应排序**：在最差情况下，每次插入操作分别需要循环 𝑛−1、𝑛−2、…、2、1 次，求和得到 (𝑛−1)𝑛/2 ，因此时间复杂度为 𝑂(𝑛2) 。在遇到有序数据时，插入操作会提前终止。当输入数组完全有序时，插入排序达到最佳时间复杂度 𝑂(𝑛) 。
+- **时间复杂度为𝑂(𝑛^2^)、自适应排序**：在最差情况下，每次插入操作分别需要循环 𝑛−1、𝑛−2、…、2、1 次，求和得到 (𝑛−1)𝑛/2 ，因此时间复杂度为  𝑂(𝑛^2^) 。在遇到有序数据时，插入操作会提前终止。当输入数组完全有序时，插入排序达到最佳时间复杂度 𝑂(𝑛) 。
 - **空间复杂度为 𝑂(1)、原地排序**：指针 𝑖 和 𝑗 使用常数大小的额外空间。
 - **稳定排序**：在插入操作过程中，我们会将元素插入到相等元素的右侧，不会改变它们的顺序。
 
 #### 插入排序的优势
 
-插入排序的时间复杂度为 ，而我们即将学习的快速排序的时间复杂度为 𝑂(𝑛log⁡𝑛) 。尽管插入排序的时间复杂度更高，**但在数据量较小的情况下，插入排序通常更快**。
+插入排序的时间复杂度为𝑂(𝑛^2^)，而我们即将学习的快速排序的时间复杂度为 𝑂(𝑛log⁡𝑛) 。尽管插入排序的时间复杂度更高，**但在数据量较小的情况下，插入排序通常更快**。
 
-这个结论与线性查找和二分查找的适用情况的结论类似。快速排序这类 𝑂(𝑛log⁡𝑛) 的算法属于基于分治策略的排序算法，往往包含更多单元计算操作。而在数据量较小时，和 𝑛log⁡𝑛 的数值比较接近，复杂度不占主导地位，每轮中的单元操作数量起到决定性作用。
+这个结论与线性查找和二分查找的适用情况的结论类似。快速排序这类 𝑂(𝑛log⁡𝑛) 的算法属于基于分治策略的排序算法，往往包含更多单元计算操作。而在数据量较小时，𝑛^2^和 𝑛log⁡𝑛 的数值比较接近，复杂度不占主导地位，每轮中的单元操作数量起到决定性作用。
 
 实际上，许多编程语言（例如 Java）的内置排序函数采用了插入排序，大致思路为：对于长数组，采用基于分治策略的排序算法，例如快速排序；对于短数组，直接使用插入排序。
 
-虽然冒泡排序、选择排序和插入排序的时间复杂度都为 ，但在实际情况中，**插入排序的使用频率显著高于冒泡排序和选择排序**，主要有以下原因。
+虽然冒泡排序、选择排序和插入排序的时间复杂度都为𝑂(𝑛^2^)，但在实际情况中，**插入排序的使用频率显著高于冒泡排序和选择排序**，主要有以下原因。
 
 - 冒泡排序基于元素交换实现，需要借助一个临时变量，共涉及 3 个单元操作；插入排序基于元素赋值实现，仅需 1 个单元操作。因此，**冒泡排序的计算开销通常比插入排序更高**。
-- 选择排序在任何情况下的时间复杂度都为 。**如果给定一组部分有序的数据，插入排序通常比选择排序效率更高**。
+- 选择排序在任何情况下的时间复杂度都为𝑂(𝑛^2^)。**如果给定一组部分有序的数据，插入排序通常比选择排序效率更高**。
 - 选择排序不稳定，无法应用于多级排序。
 
-### 11.5 快速排序  🔖
+### 11.5 快速排序 
 
-「快速排序 quick sort」是一种基于分治策略的排序算法，运行高效，应用广泛。
+「快速排序quick sort」是一种基于**分治策略**的排序算法，运行高效，应用广泛。
 
-快速排序的核心操作是“哨兵划分”，其目标是：选择数组中的某个元素作为“基准数”，将所有小于基准数的元素移到其左侧，而大于基准数的元素移到其右侧。具体来说，哨兵划分的流程如图 11-8 所示。
+快速排序的核心操作是“**哨兵划分**”，其目标是：选择数组中的某个元素作为“基准数”，将所有小于基准数的元素移到其左侧，而大于基准数的元素移到其右侧。具体来说，哨兵划分的流程如图 11-8 所示。
 
 1. 选取数组最左端元素作为基准数，初始化两个指针 `i` 和 `j` 分别指向数组的两端。
 2. 设置一个循环，在每轮中使用 `i`（`j`）分别寻找第一个比基准数大（小）的元素，然后交换这两个元素。
@@ -2496,7 +2913,9 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 ![](images/临时使用.png) 哨兵划分完成后，原数组被划分成三部分：左子数组、基准数、右子数组，且满足“左子数组任意元素 ≤ 基准数 ≤ 右子数组任意元素”。因此，我们接下来只需对这两个子数组进行排序。
 
-> 快速排序的分治策略 哨兵划分的实质是将一个较长数组的排序问题简化为两个较短数组的排序问题。
+> 快速排序的分治策略：
+>
+> 哨兵划分的实质是将一个较长数组的排序问题简化为两个较短数组的排序问题。
 
 ```
 
