@@ -40,3 +40,58 @@ func TestHashMap(t *testing.T) {
 		fmt.Println(value)
 	}
 }
+
+func TestHashMapChaining(t *testing.T) { // TODO
+	hmap := NewHashMapChaining()
+	hmap.put(200, "A")
+	hmap.put(937, "B")
+	hmap.put(750, "C")
+	//hmap.put(276, "D")
+	//hmap.put(583, "E")
+	//hmap.put(500, "F")
+	//hmap.put(300, "J")
+	//hmap.put(637, "G")
+	//hmap.put(437, "K")
+	//hmap.put(283, "L")
+	//hmap.put(237, "M")
+	//hmap.put(850, "H")
+	//hmap.put(683, "I")
+
+	hmap.print()
+	//for i, pair := range hmap.buckets {
+	//	if pair != nil {
+	//		for j, p := range pair {
+	//			println(i, j, p.key, p.val)
+	//		}
+	//	}
+	//}
+}
+
+func TestHashMapOpenAddressing(t *testing.T) {
+	hmap := NewHashMapOpenAddressing()
+	hmap.put(200, "A")
+	hmap.put(937, "B")
+	hmap.put(750, "C")
+	hmap.put(276, "D")
+	hmap.put(583, "E")
+	hmap.put(500, "F")
+	hmap.put(300, "J")
+	hmap.put(637, "G")
+	hmap.put(437, "K")
+	hmap.put(283, "L")
+	hmap.put(237, "M")
+	hmap.put(850, "H")
+	hmap.put(683, "I")
+
+	//hmap.print()
+	//println("------")
+	//hmap.remove(200)
+	//hmap.print()
+
+	for i, pair := range hmap.buckets {
+		if pair != nil && pair != hmap.TOMBSTONE {
+			println(i, pair.key, pair.val)
+		}
+	}
+
+}

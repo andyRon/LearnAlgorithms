@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// 链式地址哈希表
+// HashMapChaining 链式地址哈希表
 type HashMapChaining struct {
 	buckets     [][]pair // 桶数组
 	size        int      // 键值对数量
@@ -13,8 +13,7 @@ type HashMapChaining struct {
 	extendRatio int      // 扩容倍数
 }
 
-// 构造方法
-func newHashMapChaining() *HashMapChaining {
+func NewHashMapChaining() *HashMapChaining {
 	buckets := make([][]pair, 4)
 	for i := 0; i < 4; i++ {
 		buckets[i] = make([]pair, 0)

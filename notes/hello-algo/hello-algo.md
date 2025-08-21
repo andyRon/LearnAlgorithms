@@ -1214,26 +1214,123 @@ nums[1] = 0     // 将索引 1 处的元素更新为 0
 
 #### 哈希表常用操作
 
-初始化、查询操作、添加键值对和删除键值对等
+初始化、查询操作、添加键值对和删除键值对等。
+
+
 
 #### 哈希表简单实现
 
-最简单的情况，**仅用一个数组来实现哈希表**。在哈希表中，我们将数组中的每个空位称为桶（bucket），每个桶可存储一个键值对。因此，查询操作就是找到 `key` 对应的桶，并在桶中获取 `value` 。
+最简单的情况，**仅用一个数组来实现哈希表**。在哈希表中，我们将数组中的每个空位称为==桶（bucket）==，每个桶可存储一个键值对。因此，查询操作就是找到 `key` 对应的桶，并在桶中获取 `value` 。
 
 如何基于 `key` 定位对应的桶呢？
 
-这是通过哈希函数（hash function）实现的。哈希函数的作用是将一个较大的输入空间映射到一个较小的输出空间。在哈希表中，输入空间是所有 `key` ，输出空间是所有桶（数组索引）。换句话说，输入一个 `key` ，**可以通过哈希函数得到该 `key` 对应的键值对在数组中的存储位置**。
+这是通过==哈希函数（hash function）==实现的。哈希函数的作用是**将一个较大的输入空间映射到一个较小的输出空间**。在哈希表中，输入空间是所有 `key` ，输出空间是所有桶（数组索引）。换句话说，输入一个 `key` ，**可以通过哈希函数得到该 `key` 对应的键值对在数组中的存储位置**。
 
 输入一个 `key` ，哈希函数的计算过程：
 
 1. 通过某种哈希算法 `hash()` 计算得到哈希值。
-2. 将哈希值对桶数量（数组长度）`capacity` 取模，从而获取该 `key` 对应的数组索引 `index` 。 `index = hash(key) % capacity`
 
-随后，就可以利用 `index` 在哈希表中访问对应的桶，从而获取 `value` 。
+2. 将哈希值对桶数量（数组长度）`capacity` 取模，从而获取该 `key` 对应的数组索引 `index` 。 
+
+   `index = hash(key) % capacity`
+
+​	随后，就可以利用 `index` 在哈希表中访问对应的桶，从而获取 `value` 。
 
 设数组长度 `capacity = 100`、哈希算法 `hash(key) = key` ，易得哈希函数为 `key % 100` 。图 6-2 以 `key` 学号和 `value` 姓名为例，展示了哈希函数的工作原理。
 
 ![](images/Pasted image 20240312214336.png)
+
+```go
+/* 键值对 */
+type pair struct {
+    key int
+    val string
+}
+
+/* 基于数组实现的哈希表 */
+type arrayHashMap struct {
+    buckets []*pair
+}
+
+/* 初始化哈希表 */
+func newArrayHashMap() *arrayHashMap {
+    // 初始化数组，包含 100 个桶
+    buckets := make([]*pair, 100)
+    return &arrayHashMap{buckets: buckets}
+}
+
+/* 哈希函数 */
+func (a *arrayHashMap) hashFunc(key int) int {
+    index := key % 100
+    return index
+}
+
+/* 查询操作 */
+func (a *arrayHashMap) get(key int) string {
+    index := a.hashFunc(key)
+    pair := a.buckets[index]
+    if pair == nil {
+        return "Not Found"
+    }
+    return pair.val
+}
+
+/* 添加操作 */
+func (a *arrayHashMap) put(key int, val string) {
+    pair := &pair{key: key, val: val}
+    index := a.hashFunc(key)
+    a.buckets[index] = pair
+}
+
+/* 删除操作 */
+func (a *arrayHashMap) remove(key int) {
+    index := a.hashFunc(key)
+    // 置为 nil ，代表删除
+    a.buckets[index] = nil
+}
+
+/* 获取所有键对 */
+func (a *arrayHashMap) pairSet() []*pair {
+    var pairs []*pair
+    for _, pair := range a.buckets {
+        if pair != nil {
+            pairs = append(pairs, pair)
+        }
+    }
+    return pairs
+}
+
+/* 获取所有键 */
+func (a *arrayHashMap) keySet() []int {
+    var keys []int
+    for _, pair := range a.buckets {
+        if pair != nil {
+            keys = append(keys, pair.key)
+        }
+    }
+    return keys
+}
+
+/* 获取所有值 */
+func (a *arrayHashMap) valueSet() []string {
+    var values []string
+    for _, pair := range a.buckets {
+        if pair != nil {
+            values = append(values, pair.val)
+        }
+    }
+    return values
+}
+
+/* 打印哈希表 */
+func (a *arrayHashMap) print() {
+    for _, pair := range a.buckets {
+        if pair != nil {
+            fmt.Println(pair.key, "->", pair.val)
+        }
+    }
+}
+```
 
 
 
@@ -1251,13 +1348,13 @@ nums[1] = 0     // 将索引 1 处的元素更新为 0
 
 ![](images/Pasted image 20240312214410.png)
 
-类似于数组扩容，哈希表扩容需将所有键值对从原哈希表迁移至新哈希表，非常耗时；并且由于哈希表容量 `capacity` 改变，我们需要通过哈希函数来重新计算所有键值对的存储位置，这进一步增加了扩容过程的计算开销。为此，编程语言通常会预留足够大的哈希表容量，防止频繁扩容。
+类似于数组扩容，**哈希表扩容**需将所有键值对从原哈希表**迁移**至新哈希表，非常耗时；并且由于哈希表容量 `capacity` 改变，需要通过哈希函数来重新计算所有键值对的存储位置，这进一步增加了扩容过程的计算开销。为此，**编程语言通常会预留足够大的哈希表容量，防止频繁扩容**。
 
 ==负载因子（load factor）==是哈希表的一个重要概念，其定义为哈希表的元素数量除以桶数量，用于衡量哈希冲突的严重程度，**也常作为哈希表扩容的触发条件**。例如在 Java 中，当负载因子超过 0.75 时，系统会将哈希表扩容至原先的 2 倍。
 
 ### 6.2 哈希冲突
 
-哈希冲突会导致查询结果错误，严重影响哈希表的可用性。为了解决该问题，每当遇到哈希冲突时，我们就进行哈希表扩容，直至冲突消失为止。此方法简单粗暴且有效，但效率太低，因为哈希表扩容需要进行大量的数据搬运与哈希值计算。为了提升效率可以采用以下策略。
+哈希冲突会导致查询结果错误，严重影响哈希表的可用性。为了解决该问题，每当遇到哈希冲突时，我们就进行哈希表扩容，直至冲突消失为止。此方法简单粗暴且有效，但**效率太低**，因为哈希表扩容需要进行大量的数据搬运与**哈希值计算**。为了提升效率可以采用以下策略。
 
 1. 改良哈希表数据结构，**使得哈希表可以在出现哈希冲突时正常工作**。
 2. 仅在必要时，即当哈希冲突比较严重时，才执行扩容操作。
@@ -1286,13 +1383,138 @@ nums[1] = 0     // 将索引 1 处的元素更新为 0
 - 使用列表（动态数组）代替链表，从而简化代码。在这种设定下，哈希表（数组）包含多个桶，每个桶都是一个列表。
 - 以下实现包含哈希表扩容方法。当负载因子超过 2/3 时，我们将哈希表扩容至原先的 2 倍。
 
+```GO
+/* 链式地址哈希表 */
+type hashMapChaining struct {
+    size        int      // 键值对数量
+    capacity    int      // 哈希表容量
+    loadThres   float64  // 触发扩容的负载因子阈值
+    extendRatio int      // 扩容倍数
+    buckets     [][]pair // 桶数组
+}
+
+/* 构造方法 */
+func newHashMapChaining() *hashMapChaining {
+    buckets := make([][]pair, 4)
+    for i := 0; i < 4; i++ {
+        buckets[i] = make([]pair, 0)
+    }
+    return &hashMapChaining{
+        size:        0,
+        capacity:    4,
+        loadThres:   2.0 / 3.0,
+        extendRatio: 2,
+        buckets:     buckets,
+    }
+}
+
+/* 哈希函数 */
+func (m *hashMapChaining) hashFunc(key int) int {
+    return key % m.capacity
+}
+
+/* 负载因子 */
+func (m *hashMapChaining) loadFactor() float64 {
+    return float64(m.size) / float64(m.capacity)
+}
+
+/* 查询操作 */
+func (m *hashMapChaining) get(key int) string {
+    idx := m.hashFunc(key)
+    bucket := m.buckets[idx]
+    // 遍历桶，若找到 key ，则返回对应 val
+    for _, p := range bucket {
+        if p.key == key {
+            return p.val
+        }
+    }
+    // 若未找到 key ，则返回空字符串
+    return ""
+}
+
+/* 添加操作 */
+func (m *hashMapChaining) put(key int, val string) {
+    // 当负载因子超过阈值时，执行扩容
+    if m.loadFactor() > m.loadThres {
+        m.extend()
+    }
+    idx := m.hashFunc(key)
+    // 遍历桶，若遇到指定 key ，则更新对应 val 并返回
+    for i := range m.buckets[idx] {
+        if m.buckets[idx][i].key == key {
+            m.buckets[idx][i].val = val
+            return
+        }
+    }
+    // 若无该 key ，则将键值对添加至尾部
+    p := pair{
+        key: key,
+        val: val,
+    }
+    m.buckets[idx] = append(m.buckets[idx], p)
+    m.size += 1
+}
+
+/* 删除操作 */
+func (m *hashMapChaining) remove(key int) {
+    idx := m.hashFunc(key)
+    // 遍历桶，从中删除键值对
+    for i, p := range m.buckets[idx] {
+        if p.key == key {
+            // 切片删除
+            m.buckets[idx] = append(m.buckets[idx][:i], m.buckets[idx][i+1:]...)
+            m.size -= 1
+            break
+        }
+    }
+}
+
+/* 扩容哈希表 */
+func (m *hashMapChaining) extend() {
+    // 暂存原哈希表
+    tmpBuckets := make([][]pair, len(m.buckets))
+    for i := 0; i < len(m.buckets); i++ {
+        tmpBuckets[i] = make([]pair, len(m.buckets[i]))
+        copy(tmpBuckets[i], m.buckets[i])
+    }
+    // 初始化扩容后的新哈希表
+    m.capacity *= m.extendRatio
+    m.buckets = make([][]pair, m.capacity)
+    for i := 0; i < m.capacity; i++ {
+        m.buckets[i] = make([]pair, 0)
+    }
+    m.size = 0
+    // 将键值对从原哈希表搬运至新哈希表
+    for _, bucket := range tmpBuckets {
+        for _, p := range bucket {
+            m.put(p.key, p.val)
+        }
+    }
+}
+
+/* 打印哈希表 */
+func (m *hashMapChaining) print() {
+    var builder strings.Builder
+
+    for _, bucket := range m.buckets {
+        builder.WriteString("[")
+        for _, p := range bucket {
+            builder.WriteString(strconv.Itoa(p.key) + " -> " + p.val + " ")
+        }
+        builder.WriteString("]")
+        fmt.Println(builder.String())
+        builder.Reset()
+    }
+}	
+```
+
 
 
 > 注意:当链表很长时，查询效率 O(n) 很差。**此时可以将链表转换为“AVL 树”或“红黑树”**，从而将查询操作的时间复杂度优化至 O(log⁡n) 。
 
 #### 6.2.2 开放寻址
 
-「开放寻址 open addressing」**不引入额外的数据结构**，而是通过“多次探测”来处理哈希冲突，探测方式主要包括线性探测、平方探测和多次哈希等。
+「开放寻址 open addressing」**不引入额外的数据结构**，而是通过“**多次探测**”来处理哈希冲突，探测方式主要包括线性探测、平方探测和多次哈希等。
 
 ##### 1 线性探测
 
@@ -1321,7 +1543,122 @@ nums[1] = 0     // 将索引 1 处的元素更新为 0
 
 以下代码实现了一个包含懒删除的开放寻址（线性探测）哈希表。为了更加充分地使用哈希表的空间，我们将哈希表看作一个“环形数组”，当越过数组尾部时，回到头部继续遍历。
 
-🔖🔖
+```go
+// hashMapOpenAddressing 开放寻址哈希表
+type hashMapOpenAddressing struct {
+	buckets     []*pair
+	size        int
+	capacity    int
+	loadThres   float64
+	extendRatio int
+	TOMBSTONE   *pair // 删除标记
+}
+
+func NewHashMapOpenAddressing() *hashMapOpenAddressing {
+	return &hashMapOpenAddressing{
+		buckets:     make([]*pair, 4),
+		size:        0,
+		capacity:    4,
+		loadThres:   0.75,
+		extendRatio: 2,
+		TOMBSTONE:   &pair{-1, "-1"},
+	}
+}
+
+func (h *hashMapOpenAddressing) hashFunc(key int) int {
+	return key % h.capacity
+}
+
+// 计算当前负载因子
+func (h *hashMapOpenAddressing) loadFactor() float64 {
+	return float64(h.size) / float64(h.capacity)
+}
+
+// 搜索 key 对应的桶索引
+func (h *hashMapOpenAddressing) findBucket(key int) int { // TODO
+	index := h.hashFunc(key)
+	firstTombstone := -1 // 记录遇到的第一个TOMBSTONE的位置
+	for h.buckets[index] != nil {
+		if h.buckets[index].key == key {
+			if firstTombstone != -1 {
+				// 若之前遇到了删除标记，则将键值对移动至该索引处
+				h.buckets[firstTombstone] = h.buckets[index]
+				h.buckets[index] = h.TOMBSTONE
+				return firstTombstone // 返回移动后的桶索引
+			}
+			return index // 返回找到的索引
+		}
+		if firstTombstone == -1 && h.buckets[index] == h.TOMBSTONE {
+			firstTombstone = index // 记录遇到的首个删除标记的位置
+		}
+		index = (index + 1) % h.capacity // 线性探测，越过尾部则返回头部
+	}
+	// 若 key 不存在，则返回添加点的索引
+	if firstTombstone != -1 {
+		return firstTombstone
+	}
+	return index
+}
+
+func (h *hashMapOpenAddressing) get(key int) string {
+	index := h.findBucket(key) // 搜索 key 对应的桶索引
+	if h.buckets[index] != nil && h.buckets[index] != h.TOMBSTONE {
+		return h.buckets[index].val // 若找到键值对，则返回对应 val
+	}
+	return "" // 若键值对不存在，则返回 ""
+}
+
+// 添加操作
+func (h *hashMapOpenAddressing) put(key int, val string) {
+	if h.loadFactor() > h.loadThres {
+		h.extend() // 当负载因子超过阈值时，执行扩容
+	}
+	index := h.findBucket(key) // 搜索 key 对应的桶索引
+	if h.buckets[index] == nil || h.buckets[index] == h.TOMBSTONE {
+		h.buckets[index] = &pair{key, val} // 若键值对不存在，则添加该键值对
+		h.size++
+	} else {
+		h.buckets[index].val = val // 若找到键值对，则覆盖 val
+	}
+}
+
+// 删除操作
+func (h *hashMapOpenAddressing) remove(key int) {
+	index := h.findBucket(key) // 搜索 key 对应的桶索引
+	if h.buckets[index] != nil && h.buckets[index] != h.TOMBSTONE {
+		h.buckets[index] = h.TOMBSTONE // 若找到键值对，则用删除标记覆盖它
+		h.size--
+	}
+}
+
+// 扩容哈希表
+func (h *hashMapOpenAddressing) extend() {
+	oldBuckets := h.buckets               // 暂存原哈希表
+	h.capacity *= h.extendRatio           // 更新容量
+	h.buckets = make([]*pair, h.capacity) // 初始化扩容后的新哈希表
+	h.size = 0                            // 重置大小
+	// 将键值对从原哈希表搬运至新哈希表
+	for _, pair := range oldBuckets {
+		if pair != nil && pair != h.TOMBSTONE {
+			h.put(pair.key, pair.val)
+		}
+	}
+}
+
+// 打印哈希表
+func (h *hashMapOpenAddressing) print() {
+	for _, pair := range h.buckets {
+		if pair == nil {
+			fmt.Println("nil")
+		} else if pair == h.TOMBSTONE {
+			fmt.Println("TOMBSTONE")
+		} else {
+			fmt.Printf("%d -> %s\n", pair.key, pair.val)
+		}
+	}
+}
+
+```
 
 ##### 2 平方探测
 
@@ -1366,6 +1703,14 @@ nums[1] = 0     // 将索引 1 处的元素更新为 0
 
 **键值对的分布情况由哈希函数决定**。
 
+```go
+index = hash(key) % capacity
+```
+
+当哈希表容量 `capacity` 固定时，**哈希算法 `hash()` 决定了输出值**，进而决定了键值对在哈希表中的分布情况。
+
+这意味着，为了降低哈希冲突的发生概率，应当将注意力集中在哈希算法 `hash()` 的设计上。
+
 #### 6.3.1 哈希算法的目标
 
 为了实现“既快又稳”的哈希表数据结构，哈希算法应具备以下特点。
@@ -1394,13 +1739,64 @@ nums[1] = 0     // 将索引 1 处的元素更新为 0
 - **异或哈希**：将输入数据的每个元素通过异或操作累积到一个哈希值中。
 - **旋转哈希**：将每个字符的 ASCII 码累积到一个哈希值中，每次累积之前都会对哈希值进行旋转操作。
 
-🔖🔖
+```go
+// 加法哈希
+func addHash(key string) int {
+	var hash int64
+	var modulus int64 = 1000000007
+
+	for _, b := range []byte(key) {
+		hash = (hash + int64(b)) % modulus
+	}
+	return int(hash)
+}
+
+// 乘法哈希
+func mulHash(key string) int {
+	var hash int64
+	var modulus int64 = 1000000007
+
+	for _, b := range []byte(key) {
+		hash = (hash*31 + int64(b)) % modulus
+	}
+	return int(hash)
+}
+
+// 异或哈希
+func xorHash(key string) int {
+	hash := 0
+	modulus := 1000000007
+	for _, b := range []byte(key) {
+		fmt.Println(int(b))
+		hash ^= int(b)
+		hash = (31*hash + int(b)) % modulus
+	}
+	return hash & modulus
+}
+
+// 旋转哈希
+func rotHash(key string) int {
+	var hash int64
+	var modulus int64 = 1000000007
+
+	for _, b := range []byte(key) {
+		hash = ((hash << 4) ^ (hash >> 28) ^ int64(b)) % modulus
+	}
+	return int(hash)
+}
+```
+
+每种哈希算法的最后一步都是对大质数 `1000000007`取模，以确保哈希值在合适的范围内。
+
+<u>为什么要强调对质数取模，或者说对合数取模的弊端是什么？</u>
+
+**使用大质数作为模数，可以最大化地保证哈希值的均匀分布**。因为质数不与其他数字存在公约数，可以减少因取模操作而产生的周期性模式，从而避免哈希冲突。
 
 #### 6.3.3 常见哈希算法
 
 以上介绍的简单哈希算法都比较“脆弱”，远远没有达到哈希算法的设计目标。例如，由于加法和异或满足交换律，因此加法哈希和异或哈希无法区分内容相同但顺序不同的字符串，这可能会加剧哈希冲突，并引起一些安全问题。
 
-在实际中通常会用一些标准哈希算法，例如 MD5、SHA-1、SHA-2 和 SHA-3 等。它们可以将任意长度的输入数据映射到恒定长度的哈希值。
+在实际中通常会用一些标准哈希算法，例如 **MD5、SHA-1、SHA-2 和 SHA-3** 等。它们可以将任意长度的输入数据映射到恒定长度的哈希值。
 
 近一个世纪以来，哈希算法处在不断升级与优化的过程中。一部分研究人员努力提升哈希算法的性能，另一部分研究人员和黑客则致力于寻找哈希算法的安全性问题。表 6-2 展示了在实际应用中常见的哈希算法。
 
@@ -1428,6 +1824,10 @@ nums[1] = 0     // 将索引 1 处的元素更新为 0
 虽然自定义对象（比如链表节点）的成员变量是可变的，但它是可哈希的。**这是因为对象的哈希值通常是基于内存地址生成的**，即使对象的内容发生了变化，但它的内存地址不变，哈希值仍然是不变的。
 
 细心的你可能发现在不同控制台中运行程序时，输出的哈希值是不同的。**这是因为 Python 解释器在每次启动时，都会为字符串哈希函数加入一个随机的盐（salt）值**。这种做法可以有效防止 HashDoS 攻击，提升哈希算法的安全性。
+
+
+
+### 小结 🔖
 
 
 
