@@ -3194,10 +3194,103 @@ $$
 
 ![](images/Pasted image 20240323194739.png)
 
-🔖
 
-```
- 
+
+```go
+ /* 基于邻接矩阵实现的无向图类 */
+type graphAdjMat struct {
+    // 顶点列表，元素代表“顶点值”，索引代表“顶点索引”
+    vertices []int
+    // 邻接矩阵，行列索引对应“顶点索引”
+    adjMat [][]int
+}
+
+/* 构造函数 */
+func newGraphAdjMat(vertices []int, edges [][]int) *graphAdjMat {
+    // 添加顶点
+    n := len(vertices)
+    adjMat := make([][]int, n)
+    for i := range adjMat {
+        adjMat[i] = make([]int, n)
+    }
+    // 初始化图
+    g := &graphAdjMat{
+        vertices: vertices,
+        adjMat:   adjMat,
+    }
+    // 添加边
+    // 请注意，edges 元素代表顶点索引，即对应 vertices 元素索引
+    for i := range edges {
+        g.addEdge(edges[i][0], edges[i][1])
+    }
+    return g
+}
+
+/* 获取顶点数量 */
+func (g *graphAdjMat) size() int {
+    return len(g.vertices)
+}
+
+/* 添加顶点 */
+func (g *graphAdjMat) addVertex(val int) {
+    n := g.size()
+    // 向顶点列表中添加新顶点的值
+    g.vertices = append(g.vertices, val)
+    // 在邻接矩阵中添加一行
+    newRow := make([]int, n)
+    g.adjMat = append(g.adjMat, newRow)
+    // 在邻接矩阵中添加一列
+    for i := range g.adjMat {
+        g.adjMat[i] = append(g.adjMat[i], 0)
+    }
+}
+
+/* 删除顶点 */
+func (g *graphAdjMat) removeVertex(index int) {
+    if index >= g.size() {
+        return
+    }
+    // 在顶点列表中移除索引 index 的顶点
+    g.vertices = append(g.vertices[:index], g.vertices[index+1:]...)
+    // 在邻接矩阵中删除索引 index 的行
+    g.adjMat = append(g.adjMat[:index], g.adjMat[index+1:]...)
+    // 在邻接矩阵中删除索引 index 的列
+    for i := range g.adjMat {
+        g.adjMat[i] = append(g.adjMat[i][:index], g.adjMat[i][index+1:]...)
+    }
+}
+
+/* 添加边 */
+// 参数 i, j 对应 vertices 元素索引
+func (g *graphAdjMat) addEdge(i, j int) {
+    // 索引越界与相等处理
+    if i < 0 || j < 0 || i >= g.size() || j >= g.size() || i == j {
+        fmt.Errorf("%s", "Index Out Of Bounds Exception")
+    }
+    // 在无向图中，邻接矩阵关于主对角线对称，即满足 (i, j) == (j, i)
+    g.adjMat[i][j] = 1
+    g.adjMat[j][i] = 1
+}
+
+/* 删除边 */
+// 参数 i, j 对应 vertices 元素索引
+func (g *graphAdjMat) removeEdge(i, j int) {
+    // 索引越界与相等处理
+    if i < 0 || j < 0 || i >= g.size() || j >= g.size() || i == j {
+        fmt.Errorf("%s", "Index Out Of Bounds Exception")
+    }
+    g.adjMat[i][j] = 0
+    g.adjMat[j][i] = 0
+}
+
+/* 打印邻接矩阵 */
+func (g *graphAdjMat) print() {
+    fmt.Printf("\t顶点列表 = %v\n", g.vertices)
+    fmt.Printf("\t邻接矩阵 = \n")
+    for i := range g.adjMat {
+        fmt.Printf("\t\t\t%v\n", g.adjMat[i])
+    }
+}
 ```
 
 #### 基于邻接表的实现
@@ -3219,10 +3312,93 @@ $$
 
 另外，我们在邻接表中使用 Vertex 类来表示顶点，这样做的原因是:如果与邻接矩阵一样，用列表索引来区 分不同顶点，那么假设要删除索引为 𝑖 的顶点，则需遍历整个邻接表，将所有大于 𝑖 的索引全部减 1 ，效率 很低。而如果每个顶点都是唯一的 Vertex 实例，删除某一顶点之后就无须改动其他顶点了。
 
-🔖
+```go
+ /* 基于邻接表实现的无向图类 */
+type graphAdjList struct {
+    // 邻接表，key：顶点，value：该顶点的所有邻接顶点
+    adjList map[Vertex][]Vertex
+}
 
-```
- 
+/* 构造函数 */
+func newGraphAdjList(edges [][]Vertex) *graphAdjList {
+    g := &graphAdjList{
+        adjList: make(map[Vertex][]Vertex),
+    }
+    // 添加所有顶点和边
+    for _, edge := range edges {
+        g.addVertex(edge[0])
+        g.addVertex(edge[1])
+        g.addEdge(edge[0], edge[1])
+    }
+    return g
+}
+
+/* 获取顶点数量 */
+func (g *graphAdjList) size() int {
+    return len(g.adjList)
+}
+
+/* 添加边 */
+func (g *graphAdjList) addEdge(vet1 Vertex, vet2 Vertex) {
+    _, ok1 := g.adjList[vet1]
+    _, ok2 := g.adjList[vet2]
+    if !ok1 || !ok2 || vet1 == vet2 {
+        panic("error")
+    }
+    // 添加边 vet1 - vet2, 添加匿名 struct{},
+    g.adjList[vet1] = append(g.adjList[vet1], vet2)
+    g.adjList[vet2] = append(g.adjList[vet2], vet1)
+}
+
+/* 删除边 */
+func (g *graphAdjList) removeEdge(vet1 Vertex, vet2 Vertex) {
+    _, ok1 := g.adjList[vet1]
+    _, ok2 := g.adjList[vet2]
+    if !ok1 || !ok2 || vet1 == vet2 {
+        panic("error")
+    }
+    // 删除边 vet1 - vet2
+    g.adjList[vet1] = DeleteSliceElms(g.adjList[vet1], vet2)
+    g.adjList[vet2] = DeleteSliceElms(g.adjList[vet2], vet1)
+}
+
+/* 添加顶点 */
+func (g *graphAdjList) addVertex(vet Vertex) {
+    _, ok := g.adjList[vet]
+    if ok {
+        return
+    }
+    // 在邻接表中添加一个新链表
+    g.adjList[vet] = make([]Vertex, 0)
+}
+
+/* 删除顶点 */
+func (g *graphAdjList) removeVertex(vet Vertex) {
+    _, ok := g.adjList[vet]
+    if !ok {
+        panic("error")
+    }
+    // 在邻接表中删除顶点 vet 对应的链表
+    delete(g.adjList, vet)
+    // 遍历其他顶点的链表，删除所有包含 vet 的边
+    for v, list := range g.adjList {
+        g.adjList[v] = DeleteSliceElms(list, vet)
+    }
+}
+
+/* 打印邻接表 */
+func (g *graphAdjList) print() {
+    var builder strings.Builder
+    fmt.Printf("邻接表 = \n")
+    for k, v := range g.adjList {
+        builder.WriteString("\t\t" + strconv.Itoa(k.Val) + ": ")
+        for _, vet := range v {
+            builder.WriteString(strconv.Itoa(vet.Val) + " ")
+        }
+        fmt.Println(builder.String())
+        builder.Reset()
+    }
+}
 ```
 
 #### 效率对比
@@ -3255,10 +3431,40 @@ BFS 通常借助队列来实现，代码如下所示。队列具有“先入先�
 
 为了防止重复遍历顶点，我们需要借助一个哈希表 `visited` 来记录哪些节点已被访问。
 
-🔖
+> 哈希集合可以看作一个只存储 `key` 而不存储 `value` 的哈希表，它可以在O(1) 时间复杂度下进行 `key` 的增删查改操作。根据 `key` 的唯一性，哈希集合通常用于数据去重等场景。
 
-```
- 
+```go
+ /* 广度优先遍历 */
+// 使用邻接表来表示图，以便获取指定顶点的所有邻接顶点
+func graphBFS(g *graphAdjList, startVet Vertex) []Vertex {
+    // 顶点遍历序列
+    res := make([]Vertex, 0)
+    // 哈希集合，用于记录已被访问过的顶点
+    visited := make(map[Vertex]struct{})
+    visited[startVet] = struct{}{}
+    // 队列用于实现 BFS, 使用切片模拟队列
+    queue := make([]Vertex, 0)
+    queue = append(queue, startVet)
+    // 以顶点 vet 为起点，循环直至访问完所有顶点
+    for len(queue) > 0 {
+        // 队首顶点出队
+        vet := queue[0]
+        queue = queue[1:]
+        // 记录访问顶点
+        res = append(res, vet)
+        // 遍历该顶点的所有邻接顶点
+        for _, adjVet := range g.adjList[vet] {
+            _, isExist := visited[adjVet]
+            // 只入队未访问的顶点
+            if !isExist {
+                queue = append(queue, adjVet)
+                visited[adjVet] = struct{}{}
+            }
+        }
+    }
+    // 返回顶点遍历序列
+    return res
+}
 ```
 
 https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1 
@@ -3285,10 +3491,33 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 这种“走到尽头再返回”的算法范式通常基于递归来实现。与广度优先遍历类似，在深度优先遍历中，我们也需要借助一个哈希表 `visited` 来记录已被访问的顶点，以避免重复访问顶点。
 
-🔖
+```go
+/* 深度优先遍历辅助函数 */
+func dfs(g *graphAdjList, visited map[Vertex]struct{}, res *[]Vertex, vet Vertex) {
+    // append 操作会返回新的的引用，必须让原引用重新赋值为新slice的引用
+    *res = append(*res, vet)
+    visited[vet] = struct{}{}
+    // 遍历该顶点的所有邻接顶点
+    for _, adjVet := range g.adjList[vet] {
+        _, isExist := visited[adjVet]
+        // 递归访问邻接顶点
+        if !isExist {
+            dfs(g, visited, res, adjVet)
+        }
+    }
+}
 
-```
-
+/* 深度优先遍历 */
+// 使用邻接表来表示图，以便获取指定顶点的所有邻接顶点
+func graphDFS(g *graphAdjList, startVet Vertex) []Vertex {
+    // 顶点遍历序列
+    res := make([]Vertex, 0)
+    // 哈希集合，用于记录已被访问过的顶点
+    visited := make(map[Vertex]struct{})
+    dfs(g, visited, &res, startVet)
+    // 返回顶点遍历序列
+    return res
+}
 ```
 
 深度优先遍历的算法流程如图 9-12 所示。
@@ -3308,7 +3537,7 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 ##### 2 复杂度分析
 
-**时间复杂度**：所有顶点都会被访问 1 次，使用 O(|V|) 时间；所有边都会被访问 2 次，使用 O(2|E|) 时间；总体使用 O(|V|+|E|) 时间。
+**时间复杂度**：所有顶点都会被访问 1 次，使用 O(|V|) 时间；所有边都会被访问 2 次，使用 O(2|E|) 时间；总体使用 `O(|V|+|E|)` 时间。
 
 **空间复杂度**：列表 `res` ，哈希表 `visited` 顶点数量最多为 |V| ，递归深度最大为 |V| ，因此使用 O(|V|) 空间。
 
@@ -3366,8 +3595,25 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 > 得注意的是，由于 𝑖 和 𝑗 都是 int 类型，因此 𝑖 + 𝑗 可能会超出 int 类型的取值范围。为了避免大数越界，我们通常采用公式 `𝑚 = ⌊𝑖 + (𝑗 − 𝑖)/2⌋`来计算中点。
 
-```
-
+```go
+/* 二分查找（双闭区间） */
+func binarySearch(nums []int, target int) int {
+    // 初始化双闭区间 [0, n-1] ，即 i, j 分别指向数组首元素、尾元素
+    i, j := 0, len(nums)-1
+    // 循环，当搜索区间为空时跳出（当 i > j 时为空）
+    for i <= j {
+        m := i + (j-i)/2      // 计算中点索引 m
+        if nums[m] < target { // 此情况说明 target 在区间 [m+1, j] 中
+            i = m + 1
+        } else if nums[m] > target { // 此情况说明 target 在区间 [i, m-1] 中
+            j = m - 1
+        } else { // 找到目标元素，返回其索引
+            return m
+        }
+    }
+    // 未找到目标元素，返回 -1
+    return -1
+}
 ```
 
 时间复杂度为 𝑂(log 𝑛) :在二分循环中，区间每轮缩小一半，因此循环次数为  。  
@@ -3380,8 +3626,25 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 可以基于该表示实现具有相同功能的二分查找算法:
 
-```
- 
+```go
+ /* 二分查找（左闭右开区间） */
+func binarySearchLCRO(nums []int, target int) int {
+    // 初始化左闭右开区间 [0, n) ，即 i, j 分别指向数组首元素、尾元素+1
+    i, j := 0, len(nums)
+    // 循环，当搜索区间为空时跳出（当 i = j 时为空）
+    for i < j {
+        m := i + (j-i)/2      // 计算中点索引 m
+        if nums[m] < target { // 此情况说明 target 在区间 [m+1, j) 中
+            i = m + 1
+        } else if nums[m] > target { // 此情况说明 target 在区间 [i, m) 中
+            j = m
+        } else { // 找到目标元素，返回其索引
+            return m
+        }
+    }
+    // 未找到目标元素，返回 -1
+    return -1
+}
 ```
 
 如图 10‐3 所示，在两种区间表示下，二分查找算法的初始化、循环条件和缩小区间操作皆有所不同。
@@ -3394,18 +3657,14 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 二分查找在时间和空间方面都有较好的性能。
 
-- 二分查找的**时间效率高**。在大数据量下，对数阶的时间复杂度具有显著优势。例如，当数据大小  时，线性查找需要  轮循环，而二分查找仅需  轮循环。
-
-- 二分查找**无须额外空间**。相较于需要借助额外空间的搜索算法(例如哈希查找)，二分查找更加节省空 间。
-
+- 二分查找的**时间效率高**。在大数据量下，对数阶的时间复杂度具有显著优势。例如，当数据大小 $n = 2^{20}$ 时，线性查找需要 $2^{20} = 1048576$ 轮循环，而二分查找仅需 $\log_2 2^{20} = 20$ 轮循环。
+- 二分查找**无须额外空间**。相较于需要借助额外空间的搜索算法（例如哈希查找），二分查找更加节省空间。
 
 然而，二分查找并非适用于所有情况，主要有以下原因。
 
-- 二分查找仅适用于**有序**数据。若输入数据无序，为了使用二分查找而专门进行排序，得不偿失。因为 排序算法的时间复杂度通常为 𝑂(𝑛log𝑛) ，比线性查找和二分查找都更高。对于频繁插入元素的场景， 为保持数组有序性，需要将元素插入到特定位置，时间复杂度为 𝑂(𝑛) ，也是非常昂贵的。
-
-- 二分查找仅适用于**数组**。二分查找需要跳跃式(非连续地)访问元素，而在链表中执行跳跃式访问的效 率较低，因此不适合应用在链表或基于链表实现的数据结构。
-
-- 小数据量下，线性查找性能更佳。在线性查找中，每轮只需 1 次判断操作;而在二分查找中，需要 1 次 加法、1 次除法、1 ~ 3 次判断操作、1 次加法(减法)，共 4 ~ 6 个单元操作;因此，当数据量 𝑛 较小时， 线性查找反而比二分查找更快。
+- 二分查找仅适用于**有序**数据。若输入数据无序，为了使用二分查找而专门进行排序，得不偿失。因为排序算法的时间复杂度通常为 $O(n \log n)$ ，比线性查找和二分查找都更高。对于频繁插入元素的场景，为保持数组有序性，需要将元素插入到特定位置，时间复杂度为 $O(n)$ ，也是非常昂贵的。
+- 二分查找仅适用于**数组**。二分查找需要跳跃式（非连续地）访问元素，而在链表中执行跳跃式访问的效率较低，因此不适合应用在链表或基于链表实现的数据结构。
+- 小数据量下，线性查找性能更佳。在线性查找中，每轮只需 1 次判断操作；而在二分查找中，需要 1 次加法、1 次除法、1 ~ 3 次判断操作、1 次加法（减法），共 4 ~ 6 个单元操作；因此，当数据量 $n$ 较小时，线性查找反而比二分查找更快。
 
 ### 10.2 二分查找插入点
 
@@ -3430,16 +3689,86 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 因此二分结束时一定有：i 指向首个大于 `target` 的元素，j 指向首个小于 `target` 的元素。**易得当数组不包含 `target` 时，插入索引为 i** 。代码如下所示：
 
 ```go
-
+/* 二分查找插入点（无重复元素） */
+func binarySearchInsertionSimple(nums []int, target int) int {
+    // 初始化双闭区间 [0, n-1]
+    i, j := 0, len(nums)-1
+    for i <= j {
+        // 计算中点索引 m
+        m := i + (j-i)/2
+        if nums[m] < target {
+            // target 在区间 [m+1, j] 中
+            i = m + 1
+        } else if nums[m] > target {
+            // target 在区间 [i, m-1] 中
+            j = m - 1
+        } else {
+            // 找到 target ，返回插入点 m
+            return m
+        }
+    }
+    // 未找到 target ，返回插入点 i
+    return i
+}
 ```
 
 #### 存在重复元素的情况
 
+> 在上一题的基础上，规定数组可能包含重复元素，其余不变。
+
 假设数组中存在多个 `target` ，则普通二分查找只能返回其中一个 `target` 的索引，**而无法确定该元素的左边和右边还有多少 `target`**。
 
+题目要求将目标元素插入到最左边，**所以我们需要查找数组中最左一个 `target` 的索引**。初步考虑通过下图所示的步骤实现。
 
+1. 执行二分查找，得到任意一个 `target` 的索引，记为 $k$ 。
+2. 从索引 $k$ 开始，向左进行线性遍历，当找到最左边的 `target` 时返回。
 
+![](images/image-20250905174553785.png)
 
+此方法虽然可用，但其包含线性查找，因此时间复杂度为 $O(n)$ 。当数组中存在很多重复的 `target` 时，该方法效率很低。
+
+现考虑拓展二分查找代码。如下图所示，整体流程保持不变，每轮先计算中点索引 $m$ ，再判断 `target` 和 `nums[m]` 的大小关系，分为以下几种情况。
+
+- 当 `nums[m] < target` 或 `nums[m] > target` 时，说明还没有找到 `target` ，因此采用普通二分查找的缩小区间操作，**从而使指针 $i$ 和 $j$ 向 `target` 靠近**。
+- 当 `nums[m] == target` 时，说明小于 `target` 的元素在区间 $[i, m - 1]$ 中，因此采用 $j = m - 1$ 来缩小区间，**从而使指针 $j$ 向小于 `target` 的元素靠近**。
+
+循环完成后，$i$ 指向最左边的 `target` ，$j$ 指向首个小于 `target` 的元素，**因此索引 $i$ 就是插入点**。
+
+![](images/image-20250905174649781.png)
+
+观察以下代码，判断分支 `nums[m] > target` 和 `nums[m] == target` 的操作相同，因此两者可以合并。
+
+即便如此，我们仍然可以将判断条件保持展开，因为其逻辑更加清晰、可读性更好。
+
+```go
+/* 二分查找插入点（存在重复元素） */
+func binarySearchInsertion(nums []int, target int) int {
+    // 初始化双闭区间 [0, n-1]
+    i, j := 0, len(nums)-1
+    for i <= j {
+        // 计算中点索引 m
+        m := i + (j-i)/2
+        if nums[m] < target {
+            // target 在区间 [m+1, j] 中
+            i = m + 1
+        } else if nums[m] > target {
+            // target 在区间 [i, m-1] 中
+            j = m - 1
+        } else {
+            // 首个小于 target 的元素在区间 [i, m-1] 中
+            j = m - 1
+        }
+    }
+    // 返回插入点 i
+    return i
+}
+```
+
+> 本节的代码都是“双闭区间”写法。有兴趣的读者可以自行实现“左闭右开”写法。
+
+总的来看，二分查找无非就是给指针 和 分别设定搜索目标，目标可能是一个具体的元素（例如 `target` ），也可能是一个元素范围（例如小于 `target` 的元素）。
+
+在不断的循环二分中，指针 和 都逐渐逼近预先设定的目标。最终，它们或是成功找到答案，或是越过边界后停止。
 
 ### 10.3 二分查找边界🔖
 
@@ -3447,23 +3776,84 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 > 给定一个长度为 n 的有序数组 `nums` ，其中可能包含重复元素。请返回数组中最左一个元素 `target` 的索引。若数组中不包含该元素，则返回 −1 。
 
+回忆二分查找插入点的方法，搜索完成后 指向最左一个 `target` ，**因此查找插入点本质上是在查找最左一个 `target` 的索引**。
+
+考虑通过查找插入点的函数实现查找左边界。请注意，数组中可能不包含 `target` ，这种情况可能导致以下两种结果。
+
+- 插入点的索引 越界。
+- 元素 `nums[i]` 与 `target` 不相等。
+
+当遇到以上两种情况时，直接返回 即可。
+
+```go
+/* 二分查找最左一个 target */
+func binarySearchLeftEdge(nums []int, target int) int {
+    // 等价于查找 target 的插入点
+    i := binarySearchInsertion(nums, target)
+    // 未找到 target ，返回 -1
+    if i == len(nums) || nums[i] != target {
+        return -1
+    }
+    // 找到 target ，返回索引 i
+    return i
+}
+```
+
 
 
 #### 查找右边界
 
-1. 复用查找左边界
+如何查找最右一个 `target` 呢？
+
+最直接的方式是修改代码，替换在 `nums[m] == target` 情况下的指针收缩操作。
+
+##### 1 复用查找左边界
+
+实际上，我们可以利用查找最左元素的函数来查找最右元素，具体方法为：**将查找最右一个 `target` 转化为查找最左一个 `target + 1`**。
+
+如下图所示，查找完成后，指针 $i$ 指向最左一个 `target + 1`（如果存在），而 $j$ 指向最右一个 `target` ，**因此返回 $j$ 即可**。
 
 
 
 ![](images/image-20250213153240488.png)
 
-2. 转化为查找元素
+请注意，返回的插入点是 $i$ ，因此需要将其减 $1$ ，从而获得 $j$ ：
+
+```go
+/* 二分查找最右一个 target */
+func binarySearchRightEdge(nums []int, target int) int {
+    // 转化为查找最左一个 target + 1
+    i := binarySearchInsertion(nums, target+1)
+    // j 指向最右一个 target ，i 指向首个大于 target 的元素
+    j := i - 1
+    // 未找到 target ，返回 -1
+    if j == -1 || nums[j] != target {
+        return -1
+    }
+    // 找到 target ，返回索引 j
+    return j
+}
+```
 
 
+
+##### 2 转化为查找元素
+
+当数组不包含 `target` 时，最终 $i$ 和 $j$ 会分别指向首个大于、小于 `target` 的元素。
+
+因此，如下图所示，我们可以构造一个数组中不存在的元素，用于查找左右边界。
+
+- 查找最左一个 `target` ：可以转化为查找 `target - 0.5` ，并返回指针 $i$ 。
+- 查找最右一个 `target` ：可以转化为查找 `target + 0.5` ，并返回指针 $j$ 。
 
 ![](images/image-20250213153252586.png)
 
-### 10.4 哈希优化策略🔖
+两点值得注意：
+
+- 给定数组不包含小数，这意味着我们无须关心如何处理相等的情况。
+- 因为该方法引入了小数，所以需要将函数中的变量 `target` 改为浮点数类型（Python 无须改动）。
+
+### 10.4 哈希优化策略
 
 在算法题中，**常通过将线性查找替换为哈希查找来降低算法的时间复杂度**。
 
@@ -3471,11 +3861,56 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 #### 线性查找:以时间换空间
 
+考虑直接遍历所有可能的组合。如图 10-9 所示，我们开启一个两层循环，在每轮中判断两个整数的和是否为 `target` ，若是，则返回它们的索引。
 
+![](images/image-20250905181858262.png)
+
+```go
+/* 方法一：暴力枚举 */
+func twoSumBruteForce(nums []int, target int) []int {
+    size := len(nums)
+    // 两层循环，时间复杂度为 O(n^2)
+    for i := 0; i < size-1; i++ {
+        for j := i + 1; j < size; j++ {
+            if nums[i]+nums[j] == target {
+                return []int{i, j}
+            }
+        }
+    }
+    return nil
+}
+```
+
+此方法的时间复杂度为 $O(n^2)$ ，空间复杂度为 $O(1)$ ，在大数据量下非常耗时。
 
 #### 哈希查找:以空间换时间
 
+考虑借助一个哈希表，键值对分别为数组元素和元素索引。循环遍历数组，每轮执行下图所示的步骤。
 
+1. 判断数字 `target - nums[i]` 是否在哈希表中，若是，则直接返回这两个元素的索引。
+2. 将键值对 `nums[i]` 和索引 `i` 添加进哈希表。
+
+![](images/image-20250905181928112.png)
+
+```go
+/* 方法二：辅助哈希表 */
+func twoSumHashTable(nums []int, target int) []int {
+    // 辅助哈希表，空间复杂度为 O(n)
+    hashTable := map[int]int{}
+    // 单层循环，时间复杂度为 O(n)
+    for idx, val := range nums {
+        if preIdx, ok := hashTable[target-val]; ok {
+            return []int{preIdx, idx}
+        }
+        hashTable[val] = idx
+    }
+    return nil
+}
+```
+
+此方法通过哈希查找将时间复杂度从 $O(n^2)$ 降至 $O(n)$ ，大幅提升运行效率。
+
+由于需要维护一个额外的哈希表，因此空间复杂度为 $O(n)$ 。**尽管如此，该方法的整体时空效率更为均衡，因此它是本题的最优解法**。
 
 ### 10.5 重识搜索算法
 
@@ -3515,7 +3950,7 @@ https://www.hello-algo.com/chapter_graph/graph_traversal/#__tabbed_2_1
 
 给定大小为 𝑛 的一组数据，我们可以使用线性搜索、二分查找、树查找、哈希查找等多种方法从中搜索目标元素。各个方法的工作原理如图 10-11 所示。 ![](images/Pasted image 20240313193727.png)
 
-![](images/Pasted image 20240313193755.png)
+![](images/image-20250905182038440.png)
 
 搜索算法的选择还取决于数据体量、搜索性能要求、数据查询与更新频率等。
 
@@ -3976,6 +4411,8 @@ func insertSort(nums []int) {
 
 #### 完整实现 🔖
 
+
+
 #### 算法特性
 
 - **时间复杂度为 𝑂(𝑛+𝑚)、非自适应排序** ：涉及遍历 `nums` 和遍历 `counter` ，都使用线性时间。一般情况下 𝑛≫𝑚 ，时间复杂度趋于 𝑂(𝑛) 。
@@ -3989,6 +4426,8 @@ func insertSort(nums []int) {
 **计数排序只适用于非负整数**。若想将其用于其他类型的数据，需要确保这些数据可以转换为非负整数，并且在转换过程中不能改变各个元素之间的相对大小关系。例如，对于包含负数的整数数组，可以先给所有数字加上一个常数，将全部数字转化为正数，排序完成后再转换回去。
 
 **计数排序适用于数据量大但数据范围较小的情况**。比如，在上述示例中 𝑚 不能太大，否则会占用过多空间。而当 𝑛≪𝑚 时，计数排序使用 𝑂(𝑚) 时间，可能比 𝑂(𝑛log⁡𝑛) 的排序算法还要慢。
+
+
 
 ### 11.10 基数排序
 
