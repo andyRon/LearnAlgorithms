@@ -2,6 +2,7 @@ package ch08_heap
 
 // 建堆操作
 
+// 大顶堆
 type maxHeap struct {
 	data []any
 }
